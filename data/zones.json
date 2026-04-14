@@ -1,0 +1,165 @@
+{
+  "version": "1.0",
+  "name": "夜访禁书区",
+  "description": "霍格沃茨图书馆深夜探险游戏",
+  "max_turns": 7,
+  "zones": [
+    {
+      "id": "entrance",
+      "name": "入口走廊",
+      "name_en": "Entrance Corridor",
+      "description": "霍格沃茨图书馆的入口走廊，两侧挂满了历代校长的画像。这里是费尔奇经常巡逻的区域。",
+      "danger_base": {
+        "safe": 70,
+        "near_danger": 20,
+        "caught_pince": 0,
+        "caught_filch": 10,
+        "cursed": 0
+      },
+      "actions": [
+        { "id": "sneak", "name": "小心潜入", "risk_mod": 0, "next_zone": "general" },
+        { "id": "hide", "name": "躲进画像后", "risk_mod": -15, "stay": true },
+        { "id": "run", "name": "快速冲过", "risk_mod": 15, "next_zone": "general" },
+        { "id": "retreat", "name": "离开图书馆", "risk_mod": 0, "ending": "escape_empty" }
+      ]
+    },
+    {
+      "id": "general",
+      "name": "主借阅区",
+      "name_en": "General Section",
+      "description": "图书馆的主借阅区，一排排高大的书架延伸到视线尽头。这里是平斯夫人的主要巡逻范围。",
+      "danger_base": {
+        "safe": 60,
+        "near_danger": 25,
+        "caught_pince": 15,
+        "caught_filch": 0,
+        "cursed": 0
+      },
+      "actions": [
+        { "id": "sneak", "name": "小心前进", "risk_mod": 0, "next_zone": "gate" },
+        { "id": "search", "name": "搜索书架", "risk_mod": 10, "stay": true, "clue": true },
+        { "id": "hide", "name": "躲进书架后", "risk_mod": -15, "stay": true },
+        { "id": "retreat", "name": "返回入口", "risk_mod": 0, "next_zone": "entrance" }
+      ]
+    },
+    {
+      "id": "gate",
+      "name": "禁书区大门",
+      "name_en": "Restricted Section Gate",
+      "description": "通往禁书区的大门，上面刻着古老的警告文字。这里有平斯夫人的魔法警报。",
+      "danger_base": {
+        "safe": 40,
+        "near_danger": 25,
+        "caught_pince": 35,
+        "caught_filch": 0,
+        "cursed": 0
+      },
+      "actions": [
+        { "id": "pick_lock", "name": "尝试开门", "risk_mod": 5, "next_zone": "deep" },
+        { "id": "listen", "name": "监听动静", "risk_mod": 0, "stay": true, "clue": true },
+        { "id": "hide", "name": "躲到柱子后", "risk_mod": -15, "stay": true },
+        { "id": "retreat", "name": "返回主借阅区", "risk_mod": 0, "next_zone": "general" }
+      ]
+    },
+    {
+      "id": "deep",
+      "name": "禁书区深处",
+      "name_en": "Deep Restricted Section",
+      "description": "禁书区的深处，阴暗的空气中弥漫着腐败的气味。那些被诅咒的禁书似乎在蠕动着...",
+      "danger_base": {
+        "safe": 25,
+        "near_danger": 15,
+        "caught_pince": 45,
+        "caught_filch": 0,
+        "cursed": 15
+      },
+      "actions": [
+        { "id": "creep", "name": "缓慢前进", "risk_mod": 0, "next_zone": "secret" },
+        { "id": "search", "name": "搜索禁书", "risk_mod": 15, "stay": true, "clue": true },
+        { "id": "hide", "name": "躲进暗处", "risk_mod": -10, "stay": true },
+        { "id": "retreat", "name": "退回大门", "risk_mod": 0, "next_zone": "gate" }
+      ]
+    },
+    {
+      "id": "secret",
+      "name": "秘密藏书室",
+      "name_en": "Secret Chamber",
+      "description": "一个隐藏的密室，中央的石台上放着一本散发着幽蓝色光芒的古书——《强力药剂》！",
+      "danger_base": {
+        "safe": 10,
+        "near_danger": 10,
+        "caught_pince": 50,
+        "caught_filch": 0,
+        "cursed": 30
+      },
+      "actions": [
+        { "id": "grab", "name": "拿走《强力药剂》", "risk_mod": 20, "ending": "success" },
+        { "id": "read", "name": "翻阅禁书", "risk_mod": 25, "ending": "cursed" },
+        { "id": "hide", "name": "躲到石台后", "risk_mod": -10, "stay": true },
+        { "id": "retreat", "name": "离开密室", "risk_mod": 0, "next_zone": "deep" }
+      ]
+    }
+  ],
+  "endings": {
+    "escape_empty": {
+      "name": "安全撤离",
+      "description": "你成功离开了图书馆，虽然一无所获，但至少没有被抓住。",
+      "emoji": "🚪",
+      "points": 10
+    },
+    "caught_pince": {
+      "name": "被平斯夫人抓住",
+      "description": "你被平斯夫人当场抓住！ 她会押着你去见邓布利多，明天你的禁闭是免不了的了...",
+      "emoji": "👵",
+      "points": 0
+    },
+    "caught_filch": {
+      "name": "被费尔奇抓住",
+      "description": "你被费尔奇抓住了！那个讨厌的管理员会把你拖到他的办公室，然后通知你的院长...",
+      "emoji": "🔦",
+      "points": 0
+    },
+    "success": {
+      "name": "获得《强力药剂》",
+      "description": "你成功拿到了《强力药剂》！这是魔法界最珍贵的禁书之一，拥有它，你将获得无上的力量！",
+      "emoji": "📕",
+      "points": 100
+    },
+    "cursed": {
+      "name": "被禁书吞噬",
+      "description": "你触碰了不该触碰的禁书...黑色的雾气将你吞噬，你的灵魂被永远困在了这本书中。",
+      "emoji": "🌑",
+      "points": -50
+    },
+    "timeout": {
+      "name": "超时离开",
+      "description": "你还没找到想要的东西，雄鸡已经开始打鸣了。天亮前你必须离开，否则就会被发现。",
+      "emoji": "🌅",
+      "points": 5
+    }
+  },
+  "narrator_comments": {
+    "safe": [
+      "你成功前进了，没有被发现...",
+      "周围一片寂静，你的脚步轻如羽毛...",
+      "暂时安全，继续前进..."
+    ],
+    "near_danger": [
+      "你听到了远处传来的脚步声...",
+      "似乎有什么东西在靠近...",
+      "小心！危险正在接近！"
+    ],
+    "caught_pince": [
+      "“让我看看是谁在那里！”平斯夫人的声音在身后响起...",
+      "你的衣角被抓住了！回头一看，平斯夫人正怒视着你..."
+    ],
+    "caught_filch": [
+      "“哼哼，让我抓住了一个小偷！”一个阴冷的声音传来...",
+      "一盏灯笼照在你脸上——是费尔奇！"
+    ],
+    "cursed": [
+      "那本书突然打开了，黑色的雾气涌了出来...",
+      "禁书的内容在脑海中炸开，你感觉灵魂正在被抽离..."
+    ]
+  }
+}
