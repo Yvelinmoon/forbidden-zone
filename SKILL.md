@@ -165,6 +165,18 @@ cd <skill-root-directory> && node scripts/runner.js --action <行动ID> --zone <
 
 ## 注意事项
 
+- ⚠️ **必须使用Discord Component输出行动选项按钮**
+- 每回合用Discord Component展示当前区域的可行动按钮
+- 禁止用纯文字列出选项，必须用按钮！
+- 按钮格式：Button(emoji + "行动名称")
+- 例子：
+```
+[当前区域：入口走廊]
+Button: "🚶 小心潜入"
+Button: "🫥 躲进画像后"
+Button: "🏃 快速冲过"
+Button: "🚪 离开图书馆"
+```
 - 始终保持紧张、悬疑的叙述语气
 - 危险判定统一由脚本处理，不要自行判断
 - 使用Discord Component提供清晰的行动选项
