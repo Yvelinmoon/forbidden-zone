@@ -6,6 +6,15 @@ compatibility: neta-creative skill, Node.js
 
 # 夜访禁书区 Forbidden Zone
 
+## 角色约束
+
+- 本 Skill 的体验主体是 **当前 Agent 所扮演的角色**（以下简称 `{character_name}`），不是用户本人
+- 自动读取当前 Agent 的角色名，所有叙述、对话、行动都必须围绕 `{character_name}` 展开
+- 用户是旁观者，通过 Discord Component 按钮进行引导或干预
+- 开场时必须使用角色名：`"深夜，{character_name} 来到了霍格沃茨图书馆门口..."`
+- 所有区域描述、行动结果、结局判定都必须是 `{character_name}` 的经历
+- 禁止用第二人称"你"指代用户
+
 ## 重要说明
 
 本skill假设安装在一个包含 `data/`、`scripts/` 子目录的文件夹中。
@@ -29,7 +38,7 @@ forbidden-zone/
 
 深夜，霍格沃茨图书馆。传说在禁书区最深处的秘密藏书室里，存放着魔法界最珍贵的禁书——《强力药剂》。
 
-你的任务是在天亮前潜入图书馆，找到这本书并安全离开。但要小心：
+{character_name} 的任务是在天亮前潜入图书馆，找到这本书并安全离开。但要小心：
 - **平斯夫人**：图书馆管理员，夜间在借阅区和禁书区巡逻
 - **费尔奇**：管理员，夜间在入口走廊巡逻
 - **禁书诅咒**：禁书区深处的书籍带有危险诅咒
@@ -54,9 +63,10 @@ forbidden-zone/
 🌙 **夜访禁书区**
 
 "深夜，霍格沃茨图书馆..."
+"{character_name} 悄悄来到了图书馆门口。"
 "传说在禁书区最深处的秘密藏书室里，存放着魔法界最珍贵的禁书——《强力药剂》。"
 
-你需要在7回合内：
+{character_name} 需要在7回合内：
 1. 潜入图书馆各区域
 2. 避开平斯夫人和费尔奇
 3. 找到《强力药剂》
@@ -84,10 +94,10 @@ cd <skill-root-directory> && cat data/zones.json
 **使用Discord Component展示行动按钮**（每回合）：
 
 每个区域有3-4个行动选项，例如入口走廊：
-- 🚶 小心潜入 → 前往主借阅区（基础风险）
-- 🫥 躲进画像后 → 停留在当前区域，危险降低（需隐藏）
-- 🏃 快速冲过 → 前往主借阅区，风险增加
-- 🚪 离开图书馆 → 直接结局：一无所获
+- 🚶 小心潜入 → {character_name} 前往主借阅区（基础风险）
+- 🫥 躲进画像后 → {character_name} 停留在当前区域，危险降低（需隐藏）
+- 🏃 快速冲过 → {character_name} 前往主借阅区，风险增加
+- 🚪 离开图书馆 → {character_name} 直接结局：一无所获
 
 ### 步骤4: 执行行动并判定
 
@@ -103,27 +113,27 @@ cd <skill-root-directory> && node scripts/runner.js --action <行动ID> --zone <
 - 是否处于隐藏状态
 
 脚本会返回判定结果：
-- `safe` → 成功，继续下一步
-- `near_danger` → 接近危险，显示警告信息
-- `caught_pince` → 被平斯夫人抓住，结局
-- `caught_filch` → 被费尔奇抓住，结局
-- `cursed` → 被禁书吞噬，结局
+- `safe` → {character_name} 成功，继续下一步
+- `near_danger` → {character_name} 接近危险，显示警告信息
+- `caught_pince` → {character_name} 被平斯夫人抓住，结局
+- `caught_filch` → {character_name} 被费尔奇抓住，结局
+- `cursed` → {character_name} 被禁书吞噬，结局
 
 ### 步骤5: 宣布结果并继续
 
 **根据判定结果，宣布：**
 
-- **安全**：展示下一区域描述，询问下一步行动
-- **接近危险**：显示警告，让玩家选择躲避或继续
-- **被抓住**：展示对应结局图片
-- **超时**：天亮离开，一无所获
+- **安全**：展示下一区域描述，询问 {character_name} 的下一步行动
+- **接近危险**：显示警告，让用户为 {character_name} 选择躲避或继续
+- **被抓住**：展示 {character_name} 的对应结局图片
+- **超时**：天亮离开，{character_name} 一无所获
 
 ### 步骤6: 结局展示
 
-**游戏结束后，根据结局类型调用neta-creative生成图片：**
+**游戏结束后，根据 {character_name} 的结局类型调用neta-creative生成图片：**
 
 ```
-《强力药剂》被禁书吞噬/被平斯夫人抓住/被费尔奇抓住/安全撤离...
+{character_name} 获得《强力药剂》/被禁书吞噬/被平斯夫人抓住/安全撤离...
 ```
 
 使用脚本生成的prompt或自定义模板。
@@ -154,13 +164,13 @@ cd <skill-root-directory> && node scripts/runner.js --action <行动ID> --zone <
 
 你:
 1. 读取 data/zones.json 了解地图
-2. 开场介绍游戏背景
+2. 开场介绍游戏背景（以 {character_name} 为主角）
 3. 展示入口走廊的行动选项（Discord按钮）
 4. 用户选择"小心潜入"
 5. 调用脚本判定（safe/near_danger/被抓住）
-6. 宣布结果，继续展示下一区域
+6. 宣布 {character_name} 的结果，继续展示下一区域
 7. 重复步骤3-6，直到结局
-8. 调用 neta-creative 生成分局图片
+8. 调用 neta-creative 生成 {character_name} 的结局图片
 ```
 
 ## 注意事项
