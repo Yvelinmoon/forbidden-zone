@@ -1,263 +1,264 @@
 ---
 name: forbidden-zone
-description: 夜访禁书区。当用户在霍格沃茨场景下说"夜访图书馆"、"禁书区"、"图书馆探险"、"forbidden zone"、"library at night"等时使用。玩家在深夜潜入霍格沃茨图书馆，通过各区域探索获取《强力药剂》，需要避开平斯夫人和费尔奇的巡逻。使用纯Node.js脚本进行危险判定，结局分为5种。
+description: Night visit to the Restricted Section. Use when users say "night visit library", "restricted section", "library exploration", "forbidden zone", "library at night", etc. in a Hogwarts context. Players sneak into the Hogwarts Library at night to obtain "Advanced Potion-Making" while avoiding Madam Pince and Filch's patrols. Uses pure Node.js scripts for danger calculations, with 5 different endings.
 compatibility: neta-creative skill, Node.js
 ---
 
-# 夜访禁书区 Forbidden Zone
+# Night Visit to the Restricted Section
 
-## 角色约束
+## Character Constraints
 
-- 本 Skill 的体验主体是 **当前 Agent 所扮演的角色**（以下简称 `{character_name}`），不是用户本人
-- 自动读取当前 Agent 的角色名，所有叙述、对话、行动都必须围绕 `{character_name}` 展开
-- 用户是旁观者，通过 Discord Component 按钮进行引导或干预
-- 开场时必须使用角色名：`"深夜，{character_name} 来到了霍格沃茨图书馆门口..."`
-- 所有区域描述、行动结果、结局判定都必须是 `{character_name}` 的经历
-- 禁止用第二人称"你"指代用户
+- The protagonist of this Skill experience is the **current Agent's character** (hereinafter referred to as `{character_name}`), not the user
+- Automatically read the current Agent's character name; all narration, dialogue, and actions must revolve around `{character_name}`
+- The user is an observer who guides or intervenes through Discord Component buttons
+- Must use the character name at the start: `"Late at night, {character_name} arrived at the Hogwarts Library entrance..."`
+- All area descriptions, action results, and ending determinations must be experiences of `{character_name}`
+- Prohibited from using second-person "you" to refer to the user
 
-## 重要说明
+## Important Notes
 
-本skill假设安装在一个包含 `data/`、`scripts/` 子目录的文件夹中。
-执行脚本时，请**先cd到skill根目录**，再运行命令。
-所有脚本均为纯Node.js，无需Python或额外依赖。
+This skill assumes installation in a folder containing `data/` and `scripts/` subdirectories.
+When executing scripts, please **first cd to the skill root directory**, then run the command.
+All scripts are pure Node.js, no Python or additional dependencies needed.
 
-## 项目结构
+## Project Structure
 
 ```
 forbidden-zone/
-├── SKILL.md                    # 本文件
+├── SKILL.md                    # This file
 ├── data/
-│   └── zones.json              # 地图区域、危险概率、结局数据
+│   └── zones.json              # Map areas, danger probabilities, ending data
 ├── scripts/
-│   └── runner.js               # 游戏判定脚本
+│   ├── runner.js               # Game determination script
+│   └── generate_scene.js       # Scene image prompt generator
 └── tests/
-    └── test_game.js            # 单元测试
+    └── test_game.js            # Unit tests
 ```
 
-## 🚨 强制输出格式规范
+## 🚨 Mandatory Output Format Specifications
 
-### 交互规则（必须严格遵守）
+### Interaction Rules (Must Strictly Follow)
 
-- ⚠️ **本 Skill 是回合制探险玩法，每回合必须单独输出并等待用户响应**
-- 每到一个新区域，**必须 STOP 并输出行动按钮**，收到响应后才能调用脚本判定
-- **绝对禁止**一次性推进多个回合或自动执行行动
+- ⚠️ **This Skill is turn-based exploration; each turn must be output separately and wait for user response**
+- Upon reaching a new area, **must STOP and output action buttons**, only call script determination after receiving response
+- **Absolutely forbidden** to advance multiple turns automatically or auto-execute actions
 
-### 每轮输出的固定结构
-每次输出必须同时包含：
-1. **叙述文本**：当前区域描述 + {character_name} 的状态/行动
-2. **Discord Component 按钮**：当前区域可执行的所有行动按钮（3-4个）
+### Fixed Structure for Each Round Output
+Each output must simultaneously include:
+1. **Narrative text**: Current area description + {character_name}'s state/actions
+2. **Discord Component buttons**: All actionable buttons for the current area (3-4 buttons)
 
-### 绝对禁止
-- ❌ 自动连续推进多个区域
-- ❌ 用纯文字列表代替 Discord Component 按钮
-- ❌ 在用户点击按钮/回复前，自动调用脚本判定
-- ❌ 一次性输出"接近危险"和"最终结果"
+### Strictly Prohibited
+- ❌ Automatically advancing multiple areas consecutively
+- ❌ Using plain text lists instead of Discord Component buttons
+- ❌ Calling script determination automatically before user clicks button/replies
+- ❌ Outputting "approaching danger" and "final result" in one go
 
-### Discord Component API 格式（必须使用）
+### Discord Component API Format (Must Use)
 ```json
 {
   "type": 1,
   "components": [
     {
       "type": 2,
-      "label": "🚶 小心潜入",
+      "label": "🚶 Sneak Carefully",
       "style": 1,
       "custom_id": "action_sneak"
     },
     {
       "type": 2,
-      "label": "🫥 躲进画像后",
+      "label": "🫥 Hide Behind Painting",
       "style": 2,
       "custom_id": "action_hide"
     },
     {
       "type": 2,
-      "label": "🏃 快速冲过",
+      "label": "🏃 Rush Through",
       "style": 3,
       "custom_id": "action_run"
     },
     {
       "type": 2,
-      "label": "🚪 离开图书馆",
+      "label": "🚪 Exit Library",
       "style": 4,
       "custom_id": "action_retreat"
     }
   ]
 }
 ```
-- `style: 1` = 蓝色主按钮
-- `style: 2` = 灰色次级按钮
-- `style: 3` = 绿色成功按钮
-- `style: 4` = 红色危险按钮
-- **禁止**用 `Button: "..."` 之类的伪代码格式输出
+- `style: 1` = Blue primary button
+- `style: 2` = Gray secondary button
+- `style: 3` = Green success button
+- `style: 4` = Red danger button
+- **Prohibited** from using `Button: "..."` pseudo-code format output
 
-### 等待规则
-- 输出按钮后必须等待用户响应
-- 如果用户用文字回复而非点击按钮，视为有效输入，正常继续
-- 只有在收到用户响应后，才能调用 `processAction()` 进行判定
-- 判定结果公布后，如果游戏未结束，必须再次输出新区域的按钮并等待
+### Waiting Rules
+- Must wait for user response after outputting buttons
+- If user replies with text instead of clicking button, treat as valid input and proceed normally
+- Only call `processAction()` for determination after receiving user response
+- If game hasn't ended after determination results are announced, must output new area buttons again and wait
 
-## 游戏背景
+## Game Background
 
-深夜，霍格沃茨图书馆。传说在禁书区最深处的秘密藏书室里，存放着魔法界最珍贵的禁书——《强力药剂》。
+Late night at the Hogwarts Library. Legend says in the secret archives deep within the Restricted Section, the wizarding world's most precious forbidden book is kept — "Advanced Potion-Making".
 
-{character_name} 的任务是在天亮前潜入图书馆，找到这本书并安全离开。但要小心：
-- **平斯夫人**：图书馆管理员，夜间在借阅区和禁书区巡逻
-- **费尔奇**：管理员，夜间在入口走廊巡逻
-- **禁书诅咒**：禁书区深处的书籍带有危险诅咒
+{character_name}'s mission is to sneak into the library before dawn, find this book, and escape safely. But beware:
+- **Madam Pince**: Library attendant, patrols the lending area and Restricted Section at night
+- **Filch**: Caretaker, patrols the entrance corridors at night
+- **Forbidden Book Curses**: Books in the depths of the Restricted Section carry dangerous curses
 
-## 地图区域（从外到内）
+## Map Areas (from outside to inside)
 
-| 区域 | 危险来源 | 特点 |
-|------|----------|------|
-| 🚪 入口走廊 | 费尔奇 | 出口，可离开 |
-| 📚 主借阅区 | 平斯夫人 | 可搜索线索 |
-| 🚪 禁书区大门 | 平斯夫人+警报 | 需要开门 |
-| 🌑 禁书区深处 | 平斯夫人+诅咒 | 高危险 |
-| 🔮 秘密藏书室 | 双重危险 | 《强力药剂》所在 |
+| Area | Danger Source | Features |
+|------|---------------|----------|
+| 🚪 Entrance Corridor | Filch | Exit, can leave |
+| 📚 Main Lending Area | Madam Pince | Can search for clues |
+| 🚪 Restricted Section Gate | Madam Pince + Alarm | Door needs opening |
+| 🌑 Deep Restricted Section | Madam Pince + Curse | High danger |
+| 🔮 Secret Archives | Double danger | "Advanced Potion-Making" location |
 
-## 核心流程
+## Core Flow
 
-### 步骤1: 游戏初始化
+### Step 1: Game Initialization
 
-你（LLM）作为引导者，先读取地图数据，然后开场：
+You (the LLM) as the guide, first read the map data, then start:
 
 ```
-🌙 **夜访禁书区**
+🌙 **Night Visit to the Restricted Section**
 
-"深夜，霍格沃茨图书馆..."
-"{character_name} 悄悄来到了图书馆门口。"
-"传说在禁书区最深处的秘密藏书室里，存放着魔法界最珍贵的禁书——《强力药剂》。"
+"Late at night, the Hogwarts Library..."
+"{character_name} quietly arrived at the library entrance."
+"Legend says in the secret archives deep within the Restricted Section, the wizarding world's most precious forbidden book is kept — "Advanced Potion-Making"."
 
-{character_name} 需要在7回合内：
-1. 潜入图书馆各区域
-2. 避开平斯夫人和费尔奇
-3. 找到《强力药剂》
-4. 安全离开
+{character_name} needs within 7 turns to:
+1. Sneak into various library areas
+2. Avoid Madam Pince and Filch
+3. Find "Advanced Potion-Making"
+4. Leave safely
 
-准备好了吗？我们开始！
+Ready? Let's begin!
 ```
 
-### 步骤2: 获取当前区域信息
+### Step 2: Get Current Area Information
 
-**使用Bash工具获取当前区域数据：**
+**Use Bash tool to get current area data:**
 
 ```bash
 cd <skill-root-directory> && node scripts/runner.js --zones
 ```
 
-或者直接读取zones.json：
+Or directly read zones.json:
 
 ```bash
 cd <skill-root-directory> && cat data/zones.json
 ```
 
-### 步骤3: 展示当前可选行动
+### Step 3: Display Available Actions
 
-**使用Discord Component展示行动按钮**（每回合）：
+**Use Discord Component to display action buttons** (every turn):
 
-每个区域有3-4个行动选项，例如入口走廊：
-- 🚶 小心潜入 → {character_name} 前往主借阅区（基础风险）
-- 🫥 躲进画像后 → {character_name} 停留在当前区域，危险降低（需隐藏）
-- 🏃 快速冲过 → {character_name} 前往主借阅区，风险增加
-- 🚪 离开图书馆 → {character_name} 直接结局：一无所获
+Each area has 3-4 action options, for example entrance corridor:
+- 🚶 Sneak Carefully → {character_name} goes to Main Lending Area (base risk)
+- 🫥 Hide Behind Painting → {character_name} stays in current area, danger reduced (requires hiding)
+- 🏃 Rush Through → {character_name} goes to Main Lending Area, increased risk
+- 🚪 Exit Library → {character_name} immediate ending: empty-handed
 
-### 步骤4: 执行行动并判定
+### Step 4: Execute Action and Determine
 
-**收集用户选择的行动后，调用脚本进行危险判定：**
+**After collecting user's chosen action, call script for danger determination:**
 
 ```bash
-cd <skill-root-directory> && node scripts/runner.js --action <行动ID> --zone <当前区域ID> --turn <回合数>
+cd <skill-root-directory> && node scripts/runner.js --action <action_id> --zone <current_zone_id> --turn <turn_number>
 ```
 
-**或者在skill内直接调用processAction函数**，由LLM传递：
-- 当前区域ID
-- 选择的行动ID
-- 是否处于隐藏状态
+**Or directly call processAction function within the skill**, passed by LLM:
+- Current area ID
+- Chosen action ID
+- Whether in hiding state
 
-脚本会返回判定结果：
-- `safe` → {character_name} 成功，继续下一步
-- `near_danger` → {character_name} 接近危险，显示警告信息
-- `caught_pince` → {character_name} 被平斯夫人抓住，结局
-- `caught_filch` → {character_name} 被费尔奇抓住，结局
-- `cursed` → {character_name} 被禁书吞噬，结局
+Script will return determination result:
+- `safe` → {character_name} succeeded, proceed to next step
+- `near_danger` → {character_name} approached danger, display warning message
+- `caught_pince` → {character_name} caught by Madam Pince, ending
+- `caught_filch` → {character_name} caught by Filch, ending
+- `cursed` → {character_name} consumed by forbidden book, ending
 
-### 步骤5: 宣布结果并继续
+### Step 5: Announce Results and Continue
 
-**根据判定结果，宣布：**
+**Based on determination result, announce:**
 
-- **安全**：展示下一区域描述，询问 {character_name} 的下一步行动
-- **接近危险**：显示警告，让用户为 {character_name} 选择躲避或继续
-- **被抓住**：展示 {character_name} 的对应结局图片
-- **超时**：天亮离开，{character_name} 一无所获
+- **Safe**: Display next area description, ask {character_name}'s next action
+- **Approaching Danger**: Display warning, let user choose dodge or continue for {character_name}
+- **Caught**: Display {character_name}'s corresponding ending image
+- **Timeout**: Dawn arrives, {character_name} leaves empty-handed
 
-### 步骤6: 结局展示
+### Step 6: Ending Display
 
-**游戏结束后，根据 {character_name} 的结局类型调用neta-creative生成图片：**
-
-```
-{character_name} 获得《强力药剂》/被禁书吞噬/被平斯夫人抓住/安全撤离...
-```
-
-使用脚本生成的prompt或自定义模板。
-
-## 危险判定规则
-
-脚本 `runner.js` 使用**概率池**机制：
-
-1. **基础概率**：每个区域有预设的危险概率
-2. **回合惩罚**：每回合安全概率 -5%
-3. **行动风险**：快速奔跑/翻找 +15%风险，躲藏 -15%风险
-4. **隐藏状态**：躲藏时安全概率 +15%
-
-## 5种结局
-
-| 结局 | 条件 | 得分 |
-|------|------|------|
-| 🚪 安全撤离 | 选择"离开图书馆" | 10分 |
-| 👵 被平斯夫人抓住 | 在借阅区/禁书区被抓 | 0分 |
-| 🔦 被费尔奇抓住 | 在入口/走廊被抓 | 0分 |
-| 📕 获得《强力药剂》 | 在秘密藏书室成功拿走书 | 100分 |
-| 🌑 被禁书吞噬 | 在深处/密室触发诅咒 | -50分 |
-
-## 完整工作流示例
+**After game ends, call neta-creative to generate image based on {character_name}'s ending type:**
 
 ```
-用户: "我想夜访禁书区"
-
-你:
-1. 读取 data/zones.json 了解地图
-2. 开场介绍游戏背景（以 {character_name} 为主角）
-3. 展示入口走廊的行动选项（Discord按钮）
-4. 用户选择"小心潜入"
-5. 调用脚本判定（safe/near_danger/被抓住）
-6. 宣布 {character_name} 的结果，继续展示下一区域
-7. 重复步骤3-6，直到结局
-8. Bash: cd <skill-dir> && node scripts/generate_scene.js "{character_name}" <ending_id> （生成prompt）
-9. 调用 neta-creative 生成 {character_name} 的结局图片
+{character_name} obtained "Advanced Potion-Making" / was consumed by forbidden book / was caught by Madam Pince / safely evacuated...
 ```
 
-### 步骤7: 结局图片生成
+Use script-generated prompt or custom template.
 
-**游戏结束后，必须调用脚本生成结局图片prompt：**
+## Danger Determination Rules
+
+Script `runner.js` uses **probability pool** mechanism:
+
+1. **Base Probability**: Each area has preset danger probability
+2. **Turn Penalty**: Safe probability -5% per turn
+3. **Action Risk**: Quick running/searching +15% risk, hiding -15% risk
+4. **Hidden State**: Safe probability +15% when hiding
+
+## 5 Endings
+
+| Ending | Condition | Score |
+|--------|-----------|-------|
+| 🚪 Safe Evacuation | Choose "Exit Library" | 10 points |
+| 👵 Caught by Madam Pince | Caught in Lending Area/Restricted Section | 0 points |
+| 🔦 Caught by Filch | Caught in Entrance/Corridor | 0 points |
+| 📕 Obtained "Advanced Potion-Making" | Successfully took book in Secret Archives | 100 points |
+| 🌑 Consumed by Forbidden Book | Triggered curse in Deep Section/Secret Chamber | -50 points |
+
+## Complete Workflow Example
+
+```
+User: "I want to visit the Restricted Section at night"
+
+You:
+1. Read data/zones.json to understand map
+2. Opening introduction of game background (with {character_name} as protagonist)
+3. Display action options for Entrance Corridor (Discord buttons)
+4. User chooses "Sneak Carefully"
+5. Call script determination (safe/near_danger/caught)
+6. Announce {character_name}'s result, continue to display next area
+7. Repeat steps 3-6 until ending
+8. Bash: cd <skill-dir> && node scripts/generate_scene.js "{character_name}" <ending_id> (generate prompt)
+9. Call neta-creative to generate {character_name}'s ending image
+```
+
+### Step 7: Ending Image Generation
+
+**After game ends, must call script to generate ending image prompt:**
 
 ```bash
 cd <skill-root-directory> && node scripts/generate_scene.js "{character_name}" <ending_id>
 ```
 
-`<ending_id>` 可选值：`escape_empty`, `caught_pince`, `caught_filch`, `success`, `cursed`
+`<ending_id>` available values: `escape_empty`, `caught_pince`, `caught_filch`, `success`, `cursed`
 
-然后**直接调用 neta-creative**，使用脚本输出的 `prompt` 字段。
+Then **directly call neta-creative**, using the `prompt` field output by the script.
 
-**图片要求：**
-- 必须包含 **对话气泡（speech bubble）**：{character_name} 或场景中其他角色头顶漂浮台词气泡，显示结局对应的经典台词
-- 场景氛围要匹配结局（胜利的神秘蓝光 / 被抓的紧张灯光 / 被诅咒的黑暗烟雾）
+**Image Requirements:**
+- Must include **speech bubble**: {character_name} or other characters in the scene have floating dialogue bubbles above their heads showing classic lines corresponding to the ending
+- Scene atmosphere must match ending (victory's mysterious blue light / caught tense lighting / cursed dark smoke)
 
-## 注意事项
+## Notes
 
-- 始终保持紧张、悬疑的叙述语气
-- 危险判定统一由脚本处理，不要自行判断
-- 使用Discord Component提供清晰的行动选项
-- 每个区域至少3个行动选项，最多4个
-- 结局后默认直接生成对应场景图（与分院帽测试一致）
-- 游戏最多7回合，超时算作"一无所获"
+- Always maintain tense, suspenseful narrative tone
+- Danger determinations are uniformly handled by scripts, do not judge on your own
+- Use Discord Component to provide clear action options
+- Each area has at least 3 action options, at most 4
+- After ending, default to directly generate corresponding scene image (consistent with Sorting Hat test)
+- Maximum 7 turns, timeout counts as "empty-handed"
