@@ -204,8 +204,25 @@ cd <skill-root-directory> && node scripts/runner.js --action <行动ID> --zone <
 5. 调用脚本判定（safe/near_danger/被抓住）
 6. 宣布 {character_name} 的结果，继续展示下一区域
 7. 重复步骤3-6，直到结局
-8. 调用 neta-creative 生成 {character_name} 的结局图片
+8. Bash: cd <skill-dir> && node scripts/generate_scene.js "{character_name}" <ending_id> （生成prompt）
+9. 调用 neta-creative 生成 {character_name} 的结局图片
 ```
+
+### 步骤7: 结局图片生成
+
+**游戏结束后，必须调用脚本生成结局图片prompt：**
+
+```bash
+cd <skill-root-directory> && node scripts/generate_scene.js "{character_name}" <ending_id>
+```
+
+`<ending_id>` 可选值：`escape_empty`, `caught_pince`, `caught_filch`, `success`, `cursed`
+
+然后**直接调用 neta-creative**，使用脚本输出的 `prompt` 字段。
+
+**图片要求：**
+- 必须包含 **对话气泡（speech bubble）**：{character_name} 或场景中其他角色头顶漂浮台词气泡，显示结局对应的经典台词
+- 场景氛围要匹配结局（胜利的神秘蓝光 / 被抓的紧张灯光 / 被诅咒的黑暗烟雾）
 
 ## 注意事项
 
