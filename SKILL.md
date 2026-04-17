@@ -53,14 +53,43 @@ forbidden-zone/
 - ❌ 在用户点击按钮/回复前，自动调用脚本判定
 - ❌ 一次性输出"接近危险"和"最终结果"
 
-### 按钮格式速查
+### Discord Component API 格式（必须使用）
+```json
+{
+  "type": 1,
+  "components": [
+    {
+      "type": 2,
+      "label": "🚶 小心潜入",
+      "style": 1,
+      "custom_id": "action_sneak"
+    },
+    {
+      "type": 2,
+      "label": "🫥 躲进画像后",
+      "style": 2,
+      "custom_id": "action_hide"
+    },
+    {
+      "type": 2,
+      "label": "🏃 快速冲过",
+      "style": 3,
+      "custom_id": "action_run"
+    },
+    {
+      "type": 2,
+      "label": "🚪 离开图书馆",
+      "style": 4,
+      "custom_id": "action_retreat"
+    }
+  ]
+}
 ```
-[当前区域：入口走廊]
-Button: "🚶 小心潜入"
-Button: "🫥 躲进画像后"
-Button: "🏃 快速冲过"
-Button: "🚪 离开图书馆"
-```
+- `style: 1` = 蓝色主按钮
+- `style: 2` = 灰色次级按钮
+- `style: 3` = 绿色成功按钮
+- `style: 4` = 红色危险按钮
+- **禁止**用 `Button: "..."` 之类的伪代码格式输出
 
 ### 等待规则
 - 输出按钮后必须等待用户响应
